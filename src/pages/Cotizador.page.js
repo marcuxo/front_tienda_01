@@ -10,10 +10,22 @@ export const Cotizador = () => {
     const [ValPuntada, setValPuntada] = useState(0);
     const [AllItems, setAllItems] = useState([]);
     const [AllBordados, setAllBordados] = useState([]);
+    const [ValCalculate, setValCalculate] = useState({
+        valor_prodct: 0,
+        precio_bordado:0,
+        precio_prodBord: 0,
+        precio_ganab: 0,
+        precio_total: 0
+    })
     const [SelectData, setSelectData] = useState({
         producto: '',
-        bordado: ''
+        bordado: '',
     })
+    
+    const FormatnumberPrice = (number) => {
+        let numitm = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(number)
+        return numitm
+    }
 
     const GetValorPuntadaF = async () => {
         let valor = await GetValPuntada()
@@ -33,11 +45,48 @@ export const Cotizador = () => {
         // console.log(itemsList)
     }
 
+    const CalculatePrices = async () => {
+        if(SelectData.producto !== ''){
+            let producto_ = AllItems.find(itm=>itm.ITEM === SelectData.producto)
+            // console.log(producto_.VALOR)
+            setValCalculate({...ValCalculate,['valor_prodct']:producto_.VALOR})
+        }
+        if(SelectData.bordado !== ''){
+            let producto_ = AllBordados.find(itm=>itm.ITEM === SelectData.bordado)
+            // console.log(producto_.CANT_PUNTADAS*ValPuntada[0].VALOR)
+            setValCalculate({...ValCalculate,['precio_bordado']:producto_.CANT_PUNTADAS*ValPuntada[0].VALOR})
+        }
+        
+    }
+
     useEffect(() => {
         GetAllItems()
         GetValorPuntadaF()
         GetAllBordados()
     }, [])
+
+    useEffect(() => {
+      CalculatePrices()
+    }, [SelectData])
+
+    useEffect(() => {
+        if(ValCalculate.precio_bordado !==0 && ValCalculate.valor_prodct !== 0){
+            setValCalculate({...ValCalculate, ['precio_prodBord']:ValCalculate.precio_bordado + ValCalculate.valor_prodct})
+        }
+    }, [ValCalculate.precio_bordado,ValCalculate.valor_prodct])
+
+    useEffect(() => {
+        let porGang = 2
+        if(ValCalculate.precio_prodBord !==0){
+            setValCalculate({
+                ...ValCalculate,
+                ['precio_ganab']:ValCalculate.precio_bordado * porGang,
+                ['precio_total']:ValCalculate.precio_prodBord + (ValCalculate.precio_bordado * porGang),
+            })
+        }
+    }, [ValCalculate.precio_prodBord])
+    
+    
     
     return (
         <>
@@ -96,8 +145,17 @@ export const Cotizador = () => {
                             </Select>
                         </FormControl>
                     </div>
+                    <div className='col-12'>
+                        <span><b>Producto:</b> {SelectData.producto}</span><br/>
+                        <span><b>Bordado:</b> {SelectData.bordado}</span><br/>
+                        <span><b>Valor Producto:</b> {FormatnumberPrice(ValCalculate.valor_prodct)}</span><br/>
+                        <span><b>Valor Bordado:</b> {FormatnumberPrice(ValCalculate.precio_bordado)}</span><br/>
+                        <span><b>Valor Producto Bordado:</b> {FormatnumberPrice(ValCalculate.precio_prodBord)}</span><br/>
+                        <span><b>Valor Ganancia(1.8%):</b> {FormatnumberPrice(ValCalculate.precio_ganab)}</span><br/>
+                        <span><b>Valor Final:</b> {FormatnumberPrice(ValCalculate.precio_total)}</span><br/>
+                    </div>
                     <div className='col'>
-                        <button className='btn btn-success' onClick={()=>console.log(SelectData)}>calcular</button>
+                        <button className='btn btn-success' onClick={()=>console.log(SelectData, ValCalculate)}>calcular</button>
                     </div>
                 </div>
             </div>
