@@ -1,0 +1,1 @@
+export const URL_SRV_SHOP = "http://localhost:4090/apishop/"
